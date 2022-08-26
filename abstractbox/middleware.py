@@ -2,11 +2,12 @@ import json
 from logging import getLogger
 
 import jwt
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request
-from starlette.middleware.base import RequestResponseEndpoint
-from starlette.responses import JSONResponse, Response
 from fastapi.security import HTTPBearer
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.responses import Response
 
 http_bearer = HTTPBearer()
 log = getLogger(__name__)
@@ -15,11 +16,7 @@ log = getLogger(__name__)
 class JWTAuthMiddleware(BaseHTTPMiddleware):
     """Starlette Middleware class to handle JWT Authentication and Authorization."""
 
-    async def dispatch(
-            self,
-            request: Request,
-            call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Default Middleware gateway required by Starlette."""
         with open("settings.json") as f:
             if not (jwt_secret := json.load(f).get("jwt_secret")):
@@ -35,14 +32,14 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
                     bearer,
                     jwt_secret,
                     options={"verify_signature": True, "require": ["exp"], "verify_exp": True},
-                    algorithms=["HS256"]
+                    algorithms=["HS256"],
                 )
             except jwt.DecodeError as exc:
                 return JSONResponse(
                     content={
                         "msg": "Something went wrong authenticating your request, the signature verification failed."
                     },
-                    status_code=403
+                    status_code=403,
                 )
             else:
                 if payload["type"] == "deploy":
